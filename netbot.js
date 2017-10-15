@@ -7,7 +7,7 @@ NOTE: this script requires the Node.js modules inflection, request, wordfilter, 
 */
 
 // DEBUG
-var debug = false;		// if we don't want it to post to Twitter! Useful for debugging!
+var debug = true;		// if we don't want it to post to Twitter! Useful for debugging!
 
 // Twitter stuff
 var Twit = require('twit');
@@ -113,4 +113,4 @@ function runBot() {
 runBot();
 
 // And recycle every hour
-setInterval(runBot, 1000 * 60 * 60);
+setInterval(runBot, 1000 * 1 * 1);

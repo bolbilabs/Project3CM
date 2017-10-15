@@ -10,7 +10,7 @@ NOTE: this script requires the Node.js modules wordnik, inflection, request, wor
 var debug = true;		// if we don't want it to post to Twitter! Useful for debugging!
 
 // Wordnik stuff
-var WordnikAPIKey = '8489c93205db115a8d93702980e0ce6775085279d0473e1c6';
+var WordnikAPIKey = 'ca683a846d5357236680c06d10409c8887b07aff638f04dfa';
 var request = require('request');
 var inflection = require('inflection');
 const pokemon = require('pokemon');
@@ -21,10 +21,10 @@ var capitalize = inflection.capitalize;
 var singularize = inflection.singularize;
 var titleize = inflection.titleize;
 var pre;	// store prebuilt strings here.
-
+var error = false;
 // Blacklist
 var wordfilter = require('wordfilter');
-
+var tempStore;
 // Twitter stuff
 var Twit = require('twit');
 var T = new Twit(require('./config.js'));			// POINT TO YOUR TWITTER KEYS
@@ -129,16 +129,28 @@ function respondToMention() {
 }
 
 function runBot() {
-    console.log(" "); // just for legible logs
-    var d=new Date();
-    var ds = d.toLocaleDateString() + " " + d.toLocaleTimeString();
-    console.log(ds);  // date/time of the request
-
+    // if (!error) {
+    // console.log(" "); // just for legible logs
+    // var d=new Date();
+    // var ds = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+    // console.log(ds);  // date/time of the request
+    // }
     // Get 200 nouns with minimum corpus count of 5,000 (lower numbers = more common words)
-    request(nounUrl(5000,200), function(err, response, data) {
-        request(adjectiveUrl(100000,200), function(err2, response2, data2) {
-            request(interjectionUrl(0,200), function(err3, response3, data3) {
-                if (err != null) return;		// bail if no data
+    // while (error) {
+    request(nounUrl(5000,50), function(err, response, data) {
+        request(adjectiveUrl(100000,50), function(err2, response2, data2) {
+            request(interjectionUrl(0,50), function(err3, response3, data3) {
+                if ((response.statusCode != 200 || response2.statusCode != 200 || response3.statusCode != 200)) {
+                    error = true
+                    //console.log("again")
+                    runBot();
+                }
+                else {
+                    error = false;
+                    console.log(" "); // just for legible logs
+                    var d=new Date();
+                    var ds = d.toLocaleDateString() + " " + d.toLocaleTimeString();
+                    console.log(ds);  // date/time of the request
                 nouns = eval(data);
                 adjectives = eval(data2);
                 interjections = eval(data3);
@@ -167,19 +179,21 @@ function runBot() {
                         i--;
                     }
                 }
+                tempStore = adjectives.pick().word;
 
                 pre = [
-                    "How can ANY " + singularize(nouns.pick().word) + " play Bomberman?",
-                    "That's it. I am never going to that " + capitalize(singularize(nouns.pick().word)) + " place again. It's too " + singularize(adjectives.pick().word) + ".",
-                    "What were the creators of Pokemon thinking when they made " + pokemon.random() + "? It's just so... " + adjectives.pick().word + ".",
-                    "..." + capitalize(relations.pick()) + " warned me about people who say \"" + capitalize(interjections.pick().word) + "\"",
-                    "The ONLY thing I hate more than " + nouns.pick().word + " is " + nouns.pick().word + ".",
-                    "I hate all dogs... INCLUDING " + pluralize(dogbreednames.random()) + ". OK, maybe not ALL dogs... " + pluralize(dogbreednames.random()) + " are OK, I guess...",
-                    "So, I was playing " + titleize(game({ words: 2, alliterative: true}).spaced) + " " + (Math.trunc((Math.random() * 5)) + 1) + ", and " + relations.pick() + " started yelling at me for no reason. Oh well, at least I have " + titleize(game({ words: 2, alliterative: false}).spaced) + " " + (Math.trunc((Math.random() * 5)) + 1) + ".",
-                    "" + capitalize(relations.pick()) + " told me I was not " + adjectives.pick().word + ". TYPICAL " + characters.pick() + "er... I can't believe this.",
-                    "If " + relations.pick() + " and " + relations.pick() + " got into a fight for whatever reason, I'd probably be FORCED to side with " + relations.pick() + ".",
-                    "Why can't " + relations.pick() + " be more like " + characters.pick() + "? I mean can life be any MORE boring?",
-                    "" + capitalize(pluralize(nouns.pick().word)) + " aren't " + adjectives.pick().word + ". They're \"" + adjectives.pick().word + ".\""
+                    // "How can ANY " + singularize(nouns.pick().word) + " play Bomberman?",
+                    // "That's it. I am never going to that " + capitalize(singularize(nouns.pick().word)) + " place again. It's too " + singularize(adjectives.pick().word) + ".",
+                    // "What were the creators of Pokemon thinking when they made " + pokemon.random() + "? It's just so... " + adjectives.pick().word + ".",
+                    // "..." + capitalize(relations.pick()) + " warned me about people who say \"" + capitalize(interjections.pick().word) + "\"",
+                    // "The ONLY thing I hate more than " + nouns.pick().word + " is " + nouns.pick().word + ".",
+                    // "I hate all dogs... INCLUDING " + pluralize(dogbreednames.random()) + ". OK, maybe not ALL dogs... " + pluralize(dogbreednames.random()) + " are OK, I guess...",
+                    // "So, I was playing " + titleize(game({ words: 2, alliterative: true}).spaced) + " " + (Math.trunc((Math.random() * 5)) + 1) + ", and " + relations.pick() + " started yelling at me for no reason. Oh well, at least I have " + titleize(game({ words: 2, alliterative: false}).spaced) + " " + (Math.trunc((Math.random() * 5)) + 1) + ".",
+                    // "" + capitalize(relations.pick()) + " told me I was not " + adjectives.pick().word + ". TYPICAL " + characters.pick() + "er... I can't believe this.",
+                    // "If " + relations.pick() + " and " + relations.pick() + " got into a fight for whatever reason, I'd probably be FORCED to side with " + relations.pick() + ".",
+                    // "Why can't " + relations.pick() + " be more like " + characters.pick() + "? I mean can life be any MORE boring?",
+                    // "" + capitalize(pluralize(nouns.pick().word)) + " aren't " + adjectives.pick().word + ". They're \"" + adjectives.pick().word + ".\"",
+                    "" + characters.pick() + " isn't over" + tempStore + "... Just " + tempStore + ".",
                     // etc.
                 ];
 
@@ -198,11 +212,21 @@ function runBot() {
                     console.log("-------Follow someone who @-mentioned us");
                     followAMentioner();
                 }
+            }
             })})});
-        }
+
+
+//     request('http://api.wordnik.com/v4/words.json/randomWords?hasDictionaryDef=false&includePartOfSpeech=noun&minCorpusCount=0&maxCorpusCount=-1&minDictionaryCount=1&maxDictionaryCount=-1&minLength=5&maxLength=-1&limit=200&api_key=ca683a846d5357236680c06d10409c8887b07aff638f04dfa', function (error, response, body) {
+//   console.log('error:', error); // Print the error if one occurred
+//   console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+//   console.log('body:', body); // Print the HTML for the Google homepage.
+// });
+        // }
+    }
 
         // Run the bot
         runBot();
+
 
         // And recycle every hour
         setInterval(runBot, 1000 * 10 * 1);
