@@ -20,14 +20,19 @@ var pluralize = inflection.pluralize;
 var capitalize = inflection.capitalize;
 var singularize = inflection.singularize;
 var titleize = inflection.titleize;
-var pre;	// store prebuilt strings here.
 var error = false;
 // Blacklist
 var wordfilter = require('wordfilter');
 var tempStore;
+var verbs;
+var latestMention;
+var first = true;
 // Twitter stuff
 var Twit = require('twit');
 var T = new Twit(require('./config.js'));			// POINT TO YOUR TWITTER KEYS
+
+
+var pre = ["What. How.", "What.", "How.", "Um...", "Meh.", "OK...", "*Clicks on name.*", "Who's this guy?", "Eh.", "Wow."];	// store prebuilt strings here.
 
 
 var relations = ["my mother", "my father", "my sister", "my brother", "my aunt", "my uncle", "some guy on the internet", "the animal person", "some kid in my class", "the government", "Trump"];
@@ -62,6 +67,10 @@ function interjectionUrl(minCorpusCount, limit) {
     return "http://api.wordnik.com:80/v4/words.json/randomWords?hasDictionaryDef=false&includePartOfSpeech=interjection&minCorpusCount=" + minCorpusCount + "&maxCorpusCount=-1&minDictionaryCount=1&maxDictionaryCount=-1&minLength=5&maxLength=-1&limit=" + limit + "&api_key=" + WordnikAPIKey;
 }
 
+function verbUrl(minCorpusCount, limit) {
+    return "http://api.wordnik.com:80/v4/words.json/randomWords?hasDictionaryDef=false&includePartOfSpeech=verb-intransitive&minCorpusCount=" + minCorpusCount + "&maxCorpusCount=-1&minDictionaryCount=1&maxDictionaryCount=-1&minLength=5&maxLength=-1&limit=" + limit + "&api_key=" + WordnikAPIKey;
+}
+
 function tweet() {
     var tweetText = pre.pick();
 
@@ -69,12 +78,12 @@ function tweet() {
     console.log(tweetText);
     else
     T.post('statuses/update', {status: tweetText }, function(err, reply) {
-        if (err !== null) {
-            console.log('Error: ', err);
-        }
-        else {
+        // if (err !== null) {
+        //     console.log('Error: ', err);
+        // }
+        // else {
             console.log('Tweeted: ', tweetText);
-        }
+        // }
     });
 }
 
@@ -104,27 +113,38 @@ function followAMentioner() {
 
 function respondToMention() {
     T.get('statuses/mentions_timeline', { count:100, include_rts:0 },  function (err, reply) {
-        if (err !== null) {
-            console.log('Error: ', err);
-        }
-        else {
+        // if (err !== null) {
+        //     console.log('Error: ', err);
+        // }
+        // else {
+            pre = ["What. How.", "What.", "How.", "Um...", "Meh.", "OK...", "*Clicks on name.*", "Who is this guy?", "Eh.", "Wow."];	// store prebuilt strings here.
             mention = reply.pick();
             mentionId = mention.id_str;
             mentioner = '@' + mention.user.screen_name;
+            console.log(mentionId);
+            console.log(latestMention);
 
+            if (first || latestMention < mention.id_str) {
+                if (first) { latestMention = mention.id_str; }
+                if (!first && latestMention < mention.id_str) {latestMention = mention.id_str;}
+            first = false;
+            //lastestMention = mention.id_str;
+            console.log(parseInt(mention.id_str));
+            console.log(latestMention);
             var tweet = mentioner + " " + pre.pick();
             if (debug)
             console.log(tweet);
             else
             T.post('statuses/update', {status: tweet, in_reply_to_status_id: mentionId }, function(err, reply) {
-                if (err !== null) {
-                    console.log('Error: ', err);
-                }
-                else {
+                // if (err != null) {
+                //     console.log('Error: ', err);
+                // }
+                // else {
                     console.log('Tweeted: ', tweet);
-                }
+                // }
             });
         }
+        // }
     });
 }
 
@@ -140,7 +160,9 @@ function runBot() {
     request(nounUrl(5000,50), function(err, response, data) {
         request(adjectiveUrl(100000,50), function(err2, response2, data2) {
             request(interjectionUrl(0,50), function(err3, response3, data3) {
-                if ((response.statusCode != 200 || response2.statusCode != 200 || response3.statusCode != 200)) {
+                request(verbUrl(0,50), function(err4, response4, data4) {
+
+                if ((response.statusCode != 200 || response2.statusCode != 200 || response3.statusCode != 200 || response4.statusCode != 200)) {
                     error = true
                     //console.log("again")
                     runBot();
@@ -154,6 +176,7 @@ function runBot() {
                 nouns = eval(data);
                 adjectives = eval(data2);
                 interjections = eval(data3);
+                verbs = eval(data4);
                 // Filter out the bad nouns via the wordfilter
                 for (var i = 0; i < nouns.length; i++) {
                     if (wordfilter.blacklisted(nouns[i].word))
@@ -179,6 +202,14 @@ function runBot() {
                         i--;
                     }
                 }
+                for (var i = 0; i < verbs.length; i++) {
+                    if (wordfilter.blacklisted(verbs[i].word))
+                    {
+                        console.log("Blacklisted: " + verbs[i].word);
+                        verbs.remove(verbs[i]);
+                        i--;
+                    }
+                }
                 tempStore = adjectives.pick().word;
 
                 pre = [
@@ -193,27 +224,30 @@ function runBot() {
                     // "If " + relations.pick() + " and " + relations.pick() + " got into a fight for whatever reason, I'd probably be FORCED to side with " + relations.pick() + ".",
                     // "Why can't " + relations.pick() + " be more like " + characters.pick() + "? I mean can life be any MORE boring?",
                     // "" + capitalize(pluralize(nouns.pick().word)) + " aren't " + adjectives.pick().word + ". They're \"" + adjectives.pick().word + ".\"",
-                    "" + characters.pick() + " isn't over" + tempStore + "... Just " + tempStore + ".",
+                    // "" + characters.pick() + " isn't over" + tempStore + "... Just " + tempStore + ".",
+                    "Like. If I ever mess up and get a girlfriend, \"" + verbs.pick().word + "\" will definitely be a special word...",
+
                     // etc.
                 ];
 
                 ///----- NOW DO THE BOT STUFF
                 var rand = Math.random();
 
-                if(rand <= 1.60) {
+                if(false/*rand <= 0.5*/) {
                     console.log("-------Tweet something");
                     tweet();
 
-                } else if (rand <= 0.80) {
+                } else {
                     console.log("-------Tweet something @someone");
                     respondToMention();
 
-                } else {
-                    console.log("-------Follow someone who @-mentioned us");
-                    followAMentioner();
                 }
+                // else {
+                //     console.log("-------Follow someone who @-mentioned us");
+                //     followAMentioner();
+                // }
             }
-            })})});
+        })})})});
 
 
 //     request('http://api.wordnik.com/v4/words.json/randomWords?hasDictionaryDef=false&includePartOfSpeech=noun&minCorpusCount=0&maxCorpusCount=-1&minDictionaryCount=1&maxDictionaryCount=-1&minLength=5&maxLength=-1&limit=200&api_key=ca683a846d5357236680c06d10409c8887b07aff638f04dfa', function (error, response, body) {
@@ -225,6 +259,7 @@ function runBot() {
     }
 
         // Run the bot
+        //latestMention = 0;
         runBot();
 
 
