@@ -1,40 +1,12 @@
 {
-  "name": "swagger-client",
-  "version": "3.2.2",
-  "description": "SwaggerJS - a collection of interfaces for OAI specs",
-  "main": "dist/index.js",
-  "repository": "git@github.com:swagger-api/swagger-js.git",
-  "contributors": [
-    "(in alphabetical order)",
-    "Anna Bodnia <anna.bodnia@gmail.com>",
-    "Buu Nguyen <buunguyen@gmail.com>",
-    "Josh Ponelat <jponelat@gmail.com>",
-    "Kyle Shockey <kyleshockey1@gmail.com>",
-    "Sahar Jafari <shr.jafari@gmail.com>"
-  ],
-  "config": {
-    "deps_check_dir": ".deps_check"
+  "name": "casual-bot",
+  "version": "2.1.0",
+  "engines": {
+    "node": "8.7.0",
+    "npm": "5.5.1"
   },
-  "scripts": {
-    "build": "cross-env NODE_ENV=production webpack -p --config ./webpack.config.js",
-    "build-bundle": "cross-env NODE_ENV=production webpack -p --config ./webpack.bundle.config.js",
-    "watch": "webpack --config webpack.config.js --watch --progress",
-    "test": "npm run just-test && npm run lint",
-    "just-test": "cross-env NODE_ENV=test node ./node_modules/.bin/_mocha --recursive --compilers js:babel-core/register",
-    "test:watch": "npm run test -- -w",
-    "lint": "eslint src/ test/",
-    "deps-license": "license-checker --production --csv --out $npm_package_config_deps_check_dir/licenses.csv && license-checker --development --csv --out $npm_package_config_deps_check_dir/licenses-dev.csv",
-    "deps-size": "webpack -p --config webpack.check.js --json | webpack-bundle-size-analyzer >| $npm_package_config_deps_check_dir/sizes.txt",
-    "deps-check": "npm run deps-license && npm run deps-size"
-  },
-  "keywords": [
-    "oai",
-    "swagger",
-    "js",
-    "spec",
-    "resolver",
-    "json-refs"
-  ],
+  "description": "Mr. Casual Twitter Bot",
+  "main": "index.js",
   "license": "Apache-2.0",
   "devDependencies": {
     "babel-core": "^6.23.1",
@@ -77,10 +49,17 @@
     "pokemon": "^1.2.0",
     "project-name-generator": "^2.1.4",
     "qs": "^6.3.0",
+    "random-country": "^1.0.1",
     "request": "^2.83.0",
+    "superfood": "^1.0.0",
     "twit": "^2.2.9",
     "url": "^0.11.0",
-    "wordfilter": "^0.2.6",
-    "wordnik": "file:node_modules/wordnik"
-  }
+    "wordfilter": "^0.2.6"
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "test"
+  },
+  "author": "David"
 }
